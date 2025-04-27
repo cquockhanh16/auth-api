@@ -464,7 +464,7 @@ class AppServices {
                 employee_name: emp.employee_name,
               }));
             } else {
-              list.map((rew) => {
+              data = list.map((rew) => {
                 Employee.findOne({ employee_id: rew.employee_id }).then(
                   (empp) => {
                     if (empp) {
@@ -484,7 +484,7 @@ class AppServices {
             res({
               total_page: Math.ceil(list.length / limit),
               current_page: page,
-              data: list,
+              data: data,
               limit,
             });
           })
