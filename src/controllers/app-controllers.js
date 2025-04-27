@@ -348,8 +348,6 @@ class AppControllers {
       next(error);
     }
   };
-
-  getAllAccount;
 }
 
 module.exports = AppControllers;

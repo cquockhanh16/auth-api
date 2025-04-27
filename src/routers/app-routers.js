@@ -52,7 +52,7 @@ router.delete(
   AppControllers.deleteRewardDisciplineById
 );
 
-router.get("/detail/reward-discipline", AppControllers.getDetailSalarySheet);
+router.post("/detail/salarysheet", AppControllers.getDetailSalarySheet);
 
 router.post(
   "/read-file/timesheet",
