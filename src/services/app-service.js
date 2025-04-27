@@ -9,10 +9,12 @@ const RewardDiscipline = require("../models/rewardDiscipline-model");
 const SalarySheet = require("../models/salarysheet-model");
 const bcrypt = require("bcrypt");
 const moment = require("moment");
+const { parsePhoneNumberFromString } = require("libphonenumber-js");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const XLSX = require("xlsx");
 const SALT_ROUNDS = 12;
+const { sendSMS } = require("./sms-service");
 const { sendEmail, sendEmailToTele } = require("./mail-service");
 const {
   getDaysInMonthFromTimestamp,
@@ -71,8 +73,24 @@ class AppServices {
           newAccount.password = hash;
           const id = Math.floor(10000000 + Math.random() * 90000000).toString();
           newAccount.otp = id;
-          const subject = "Xác thực email của bạn với mã OTP - Social";
-          const html = `
+          if (
+            username.length <= 11 ||
+            username[0] === "0" ||
+            username[0] === "+"
+          ) {
+            const phoneNumber = parsePhoneNumberFromString(username, "VN");
+            const subject = `Xác thực OTP của bạn với mã OTP: ${id}`;
+            sendSMS(phoneNumber?.formatInternational(), subject).then(
+              (result) => {
+                newAccount
+                  .save()
+                  .then((data) => res(data))
+                  .catch((error) => rej(error));
+              }
+            );
+          } else {
+            const subject = "Xác thực email của bạn với mã OTP - Social";
+            const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #1877f2;">Thêm một bước nữa để đổi mật khẩu của bạn</h2>
         <p>Xin chào ${username.split("@")[0]},</p>
@@ -98,12 +116,15 @@ class AppServices {
         </p>
       </div>
     `;
-          sendEmail(newAccount.username, subject, null, html).then((result) => {
-            newAccount
-              .save()
-              .then((data) => res(data))
-              .catch((error) => rej(error));
-          });
+            sendEmail(newAccount.username, subject, null, html).then(
+              (result) => {
+                newAccount
+                  .save()
+                  .then((data) => res(data))
+                  .catch((error) => rej(error));
+              }
+            );
+          }
         });
       });
     });
