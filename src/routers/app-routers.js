@@ -1,6 +1,8 @@
 const express = require("express");
-
+const multer = require("multer");
 const router = express.Router();
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const AppControllers = require("../controllers/app-controllers");
 
@@ -51,5 +53,11 @@ router.delete(
 );
 
 router.get("/detail/reward-discipline", AppControllers.getDetailSalarySheet);
+
+router.post(
+  "/read-file/timesheet",
+  upload.single("file"),
+  AppControllers.addTimesheetFromFileExcel
+);
 
 module.exports = router;

@@ -10,6 +10,7 @@ const SalarySheet = require("../models/salarysheet-model");
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
+const XLSX = require("xlsx");
 const SALT_ROUNDS = 12;
 const { sendEmail } = require("./mail-service");
 const {
@@ -66,17 +67,36 @@ class AppServices {
             rej("Bcrypt password err");
           }
           newAccount.password = hash;
-          const id = uuidv4();
+          const id = Math.floor(10000000 + Math.random() * 90000000).toString();
           newAccount.otp = id;
           const subject = "Xác thực email của bạn với mã OTP - Social";
-          const text = `Xin chào ${newAccount.username},
-                    Bạn đang thực hiện xác thực email trên Social. 
-                    Mã OTP của bạn là: ${newAccount.otp}
-                    Vui lòng không chia sẻ mã này với bất kỳ ai.
-                    Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này hoặc liên hệ hỗ trợ.
-                    Trân trọng,
-                    Đội ngũ Social`;
-          sendEmail(newAccount.username, subject, text).then((result) => {
+          const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #1877f2;">Thêm một bước nữa để đổi mật khẩu của bạn</h2>
+        <p>Xin chào ${username.split("@")[0]},</p>
+        <p>Chúng tôi đã nhận được yêu cầu đổi mật khẩu của bạn. Vui lòng nhập mã này vào Facebook:</p>
+        
+        <div style="background: #f6f7f9; padding: 15px; text-align: center; margin: 20px 0;">
+          <strong style="font-size: 24px; letter-spacing: 2px;">${id}</strong>
+        </div>
+        
+        <p style="color: #ff0000; font-weight: bold;">
+          Không chia sẻ mã này với bất kỳ ai.
+        </p>
+        
+        <h4>Nếu có người yêu cầu mã hóa này</h4>
+        <p>Đừng chia sẻ mã này với bất kỳ ai, đặc biệt với người nói là họ đang làm việc cho Facebook hoặc Meta.</p>
+        
+        <h4>Bạn không gửi yêu cầu này?</h4>
+        <p>Nếu bạn nhận được email này mà không muốn đặt lại mật khẩu, hãy <a href="https://facebook.com/help">báo cáo với chúng tôi</a>.</p>
+        
+        <hr style="border: 0; border-top: 1px solid #ddd;">
+        <p style="font-size: 12px; color: #777;">
+          © ${new Date().getFullYear()} Facebook. All rights reserved.
+        </p>
+      </div>
+    `;
+          sendEmail(newAccount.username, subject, null, html).then((result) => {
             newAccount
               .save()
               .then((data) => res(data))
@@ -520,7 +540,7 @@ class AppServices {
             }
             const object = {};
             object.month = +month;
-            object.salary = emp.employee_salary || 1000000;
+            object.salary = emp?.employee_salary || 1000000;
             object.standardWorkingDays =
               getDaysInMonthFromTimestamp(+month) - 8;
             Promise.all([
@@ -553,6 +573,12 @@ class AppServices {
       if (!file) {
         rej("File not found");
       }
+      const workbook = XLSX.read(file.buffer);
+      const jsonData = XLSX.utils.sheet_to_json(
+        workbook.Sheets[workbook.SheetNames[0]]
+      );
+      console.log(jsonData);
+      res(jsonData);
     });
   };
 }

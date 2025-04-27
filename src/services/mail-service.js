@@ -12,13 +12,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendEmail = (to, subject, text, file = null) => {
+const sendEmail = (to, subject, text, html = null, file = null) => {
   const fileType = file && file.type ? file.type : "application/octet-stream";
+  let object = {};
+  if (text) {
+    object.text = text;
+  }
+  if (html) {
+    object.html = html;
+  }
   return transporter.sendMail({
     from: process.env.MAIL_USER,
     to,
     subject,
-    text,
     attachments: file
       ? [
           {
@@ -28,6 +34,7 @@ const sendEmail = (to, subject, text, file = null) => {
           },
         ]
       : [],
+    ...object,
   });
 };
 

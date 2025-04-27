@@ -319,6 +319,22 @@ class AppControllers {
       next(error);
     }
   };
+
+  static addTimesheetFromFileExcel = async (req, res, next) => {
+    try {
+      const { file } = req;
+      console.log(file);
+      const user = await AppServices.addTimesheetFromFileExcel(file);
+      res.status(200).json({
+        sts: true,
+        data: user,
+        err: null,
+        mes: "get salary sheet success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 module.exports = AppControllers;
