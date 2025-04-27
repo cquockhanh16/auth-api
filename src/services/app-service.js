@@ -3,11 +3,19 @@ const Account = require("../models/account-model");
 const Project = require("../models/project-model");
 const Feedback = require("../models/feed-back-model");
 const Course = require("../models/course-model");
+const Employee = require("../models/employee-model");
+const Timesheet = require("../models/timesheet-model");
+const RewardDiscipline = require("../models/rewardDiscipline-model");
+const SalarySheet = require("../models/salarysheet-model");
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const SALT_ROUNDS = 12;
 const { sendEmail } = require("./mail-service");
+const {
+  getDaysInMonthFromTimestamp,
+  getMilisecondsOnMongth,
+} = require("../utils/time-function");
 
 class AppServices {
   static createUser = (body, file = null) => {
@@ -203,6 +211,348 @@ class AppServices {
       Project.find()
         .then((data) => res(data))
         .catch((err) => rej(err));
+    });
+  };
+
+  static addEmployee = (body) => {
+    return new Promise((res, rej) => {
+      const { employee_id, employee_name, employee_salary } = body;
+      if (!employee_id || !employee_name || !employee_salary) {
+        rej("Employee id or name is required");
+      }
+      Employee.findOne({ employee_id })
+        .then((emp) => {
+          if (emp) {
+            rej("Employee id is already");
+          }
+          const nemp = new Employee();
+          nemp.employee_id = employee_id;
+          nemp.employee_name = employee_name;
+          nemp.employee_salary = employee_salary;
+          return nemp.save();
+        })
+        .then((data) => res(data))
+        .catch((error) => rej(error));
+    });
+  };
+
+  static addTimesheet = (body) => {
+    return new Promise((res, rej) => {
+      const { employee_id, workday, date_in, date_out } = body;
+      if (!employee_id || !workday || !date_in || !date_out) {
+        rej("Field is empty");
+      }
+      Timesheet.findOne({ employee_id, workday })
+        .then((data) => {
+          if (data) {
+            rej("Workday of employee_id is already exist");
+          }
+          const newTime = new Timesheet({
+            employee_id,
+            workday: +workday,
+            date_in: +date_in,
+            date_out: +date_out,
+          });
+          return newTime.save();
+        })
+        .then((data) => res(data))
+        .catch((error) => rej(error));
+    });
+  };
+
+  static updateTimesheet = (body) => {
+    return new Promise((res, rej) => {
+      const { employee_id, workday, date_in, date_out } = body;
+      Timesheet.findOne({ employee_id, workday })
+        .then((result) => {
+          if (!result) {
+            const newTime = new Timesheet({
+              employee_id,
+              workday: +workday,
+              date_in,
+              date_out,
+            });
+            return newTime.save();
+          }
+          date_in ? (result.date_in = date_in) : "";
+          date_out ? (result.date_out = date_out) : "";
+          return result.save();
+        })
+        .then((data) => res(data))
+        .catch((error) => rej(error));
+    });
+  };
+
+  static deleteTimesheetById = (id) => {
+    return new Promise((res, rej) => {
+      Timesheet.deleteOne({ _id: id })
+        .then((resp) => res(resp))
+        .catch((error) => rej(error));
+    });
+  };
+
+  static getAllTimesheet = (body, query) => {
+    return new Promise((res, rej) => {
+      let employee_id = null,
+        employee_name = null,
+        workday = null;
+      body ? ({ employee_id, employee_name, workday } = body) : "";
+      const limit = query.limit || 20;
+      const page = query.page || 1;
+      const option = {};
+      employee_id ? (option.employee_id = employee_id) : "";
+      employee_name ? (option.employee_name = employee_name) : "";
+      workday ? (option.workday = workday) : "";
+      Employee.findOne(option).then((emp) => {
+        Timesheet.find(option)
+          .limit(limit)
+          .skip((page - 1) * limit)
+          .sort({ workday: -1 })
+          .then((list) => {
+            let data = [];
+            if (emp) {
+              data = list.map((sheet) => ({
+                ...sheet._doc,
+                employee_name: emp.employee_name,
+              }));
+            } else {
+              data = list.map((sheet) => {
+                Employee.findOne({ employee_id: sheet.employee_id }).then(
+                  (empp) => {
+                    if (empp) {
+                      return {
+                        ...sheet._doc,
+                        employee_name: empp.employee_name,
+                      };
+                    }
+                    return {
+                      ...sheet._doc,
+                      employee_name: "",
+                    };
+                  }
+                );
+              });
+            }
+            res({
+              total_page: Math.ceil(list.length / limit),
+              current_page: page,
+              data: data,
+              limit,
+            });
+          })
+          .catch((error) => rej(error));
+      });
+    });
+  };
+
+  static addRewardDiscipline = (body) => {
+    return new Promise((res, rej) => {
+      const { employee_id, workday, type, reason, amount } = body;
+      if (!employee_id || !workday || !amount) {
+        rej("Field is empty");
+      }
+      const newRew = new RewardDiscipline({
+        employee_id,
+        workday: +workday,
+        type,
+        reason,
+        amount,
+      });
+      newRew
+        .save()
+        .then((resp) => res(resp))
+        .catch((error) => rej(error));
+    });
+  };
+
+  static updateRewardDiscipline = (body, id) => {
+    return new Promise((res, rej) => {
+      const { employee_id, workday, type, reason, amount } = body;
+      RewardDiscipline.findById(id)
+        .then((rew) => {
+          if (!rew) {
+            rej("RewardDiscipline not found");
+          }
+          employee_id ? (rew.employee_id = employee_id) : "";
+          workday ? (rew.workday = +workday) : "";
+          type ? (rew.type = type) : "";
+          reason ? (rew.reason = reason) : "";
+          amount ? (rew.amount = amount) : "";
+          return rew.save();
+        })
+        .then((data) => res(data))
+        .catch((error) => rej(error));
+    });
+  };
+
+  static deleteRewardDisciplineById = (id) => {
+    return new Promise((res, rej) => {
+      RewardDiscipline.deleteOne({ _id: id })
+        .then((resp) => res(resp))
+        .catch((error) => rej(error));
+    });
+  };
+
+  static getAllRewardDiscipline = (body, query) => {
+    return new Promise((res, rej) => {
+      let employee_id = null,
+        employee_name = null,
+        workday = null,
+        type = null;
+
+      body ? ({ employee_id, employee_name, workday, type } = body) : "";
+      const limit = query.limit || 20;
+      const page = query.page || 1;
+      const option = {};
+      employee_id ? (option.employee_id = employee_id) : "";
+      employee_name ? (option.employee_name = employee_name) : "";
+      workday ? (option.workday = +workday) : "";
+      type ? (option.type = type) : "";
+      Employee.findOne(option).then((emp) => {
+        RewardDiscipline.find(option)
+          .limit(limit)
+          .skip((page - 1) * limit)
+          .sort({ workday: -1 })
+          .then((list) => {
+            let data = [];
+            if (emp) {
+              data = list.map((rew) => ({
+                ...rew._doc,
+                employee_name: emp.employee_name,
+              }));
+            } else {
+              list.map((rew) => {
+                Employee.findOne({ employee_id: rew.employee_id }).then(
+                  (empp) => {
+                    if (empp) {
+                      return {
+                        ...rew._doc,
+                        employee_name: empp.employee_name,
+                      };
+                    }
+                    return {
+                      ...rew._doc,
+                      employee_name: "",
+                    };
+                  }
+                );
+              });
+            }
+            res({
+              total_page: Math.ceil(list.length / limit),
+              current_page: page,
+              data: list,
+              limit,
+            });
+          })
+          .catch((error) => rej(error));
+      });
+    });
+  };
+
+  static getActualWorkingDays = (month, emp_id) => {
+    const nextMonth = getMilisecondsOnMongth(month);
+    console.log(month, nextMonth, emp_id);
+    return new Promise((res, rej) => {
+      Timesheet.find({
+        employee_id: emp_id,
+        workday: {
+          $gte: month,
+          $lt: nextMonth,
+        },
+      })
+        .then((list) => {
+          console.log(list);
+          res(list.length);
+        })
+        .catch((error) => rej(error));
+    });
+  };
+
+  static getRewardDisciplineOnMonth = (month, emp_id) => {
+    const nextMonth = getMilisecondsOnMongth(month);
+    return new Promise((res, rej) => {
+      RewardDiscipline.find({
+        employee_id: emp_id,
+        workday: {
+          $gte: month,
+          $lt: nextMonth,
+        },
+      })
+        .then((list) => {
+          let bonus = 0,
+            fine = 0;
+          list.map((rew) => {
+            if (rew.type === "Thưởng") {
+              bonus += rew.amount;
+            } else {
+              fine += rew.amount;
+            }
+          });
+          res({ bonus, fine });
+        })
+        .catch((error) => rej(error));
+    });
+  };
+
+  static getDetailSalarySheet = (body) => {
+    return new Promise((res, rej) => {
+      let employee_id = null,
+        employee_name = null,
+        month = null;
+
+      body ? ({ employee_id, employee_name, month } = body) : "";
+      if (!employee_id || !month) {
+        rej("Field not empty");
+      }
+      const option = {};
+      option.employee_id = employee_id;
+      employee_name ? (option.employee_name = employee_name) : "";
+      option.month = month;
+      Employee.findOne({ employee_id })
+        .then((emp) => {
+          if (!emp) {
+            rej("Employee not fount");
+          }
+          RewardDiscipline.findOne(option).then((rew) => {
+            if (rew) {
+              res({ ...rew._doc, employee_name: emp.employee_name });
+            }
+            const object = {};
+            object.month = +month;
+            object.salary = emp.employee_salary || 1000000;
+            object.standardWorkingDays =
+              getDaysInMonthFromTimestamp(+month) - 8;
+            Promise.all([
+              AppServices.getActualWorkingDays(+month, employee_id),
+              AppServices.getRewardDisciplineOnMonth(+month, employee_id),
+            ])
+              .then((result) => {
+                console.log(result, object);
+                object.actualWorkingDays = result[0] || 0;
+                object.bonus = result[1].bonus || 0;
+                object.fine = result[1].fine || 0;
+                object.baseSalary =
+                  (object.salary / object.standardWorkingDays) *
+                  object.actualWorkingDays;
+                object.employee_id = employee_id;
+                const nSalarySheert = new SalarySheet(object);
+                return nSalarySheert.save();
+              })
+              .then((ns) => {
+                res({ ...ns._doc, employee_name: emp.employee_name });
+              })
+              .catch((error) => rej(error));
+          });
+        })
+        .catch((error) => rej(error));
+    });
+  };
+  static addTimesheetFromFileExcel = (file) => {
+    return new Promise((res, rej) => {
+      if (!file) {
+        rej("File not found");
+      }
     });
   };
 }

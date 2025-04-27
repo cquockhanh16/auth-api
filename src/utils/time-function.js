@@ -30,4 +30,23 @@ const getMonthsBetweenDates = (ms1, ms2) => {
   return Math.abs(months);
 };
 
-module.exports = { getTime, getMonthsBetweenDates };
+function getDaysInMonthFromTimestamp(timestamp) {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-11
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function getMilisecondsOnMongth(timestamp) {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-11
+  return new Date(year, month + 2, 0).getTime();
+}
+
+module.exports = {
+  getTime,
+  getMonthsBetweenDates,
+  getDaysInMonthFromTimestamp,
+  getMilisecondsOnMongth,
+};

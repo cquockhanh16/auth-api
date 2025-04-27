@@ -167,6 +167,158 @@ class AppControllers {
       next(error);
     }
   };
+
+  static addEmployee = async (req, res, next) => {
+    try {
+      const { body } = req;
+      const newUser = await AppServices.addEmployee(body);
+      res.status(201).json({
+        sts: true,
+        data: newUser,
+        err: null,
+        mes: "create employee success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static addTimesheet = async (req, res, next) => {
+    try {
+      const { body } = req;
+      const newUser = await AppServices.addTimesheet(body);
+      res.status(201).json({
+        sts: true,
+        data: newUser,
+        err: null,
+        mes: "create timesheet success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static updateTimesheet = async (req, res, next) => {
+    try {
+      const { body } = req;
+      const newUser = await AppServices.updateTimesheet(body);
+      res.status(200).json({
+        sts: true,
+        data: newUser,
+        err: null,
+        mes: "update timesheet success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static deleteTimesheetById = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const newUser = await AppServices.deleteTimesheetById(id);
+      res.status(200).json({
+        sts: true,
+        data: newUser,
+        err: null,
+        mes: "delete timesheet success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static getAllTimesheet = async (req, res, next) => {
+    try {
+      const { body, query } = req;
+      console.log(body, query);
+      const user = await AppServices.getAllTimesheet(body, query);
+      res.status(200).json({
+        sts: true,
+        data: user,
+        err: null,
+        mes: "get timesheet success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static addRewardDiscipline = async (req, res, next) => {
+    try {
+      const { body } = req;
+      const newUser = await AppServices.addRewardDiscipline(body);
+      res.status(201).json({
+        sts: true,
+        data: newUser,
+        err: null,
+        mes: "create RewardDiscipline success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static updateRewardDiscipline = async (req, res, next) => {
+    try {
+      const { body } = req;
+      const { id } = req.params;
+      const newUser = await AppServices.updateRewardDiscipline(body, id);
+      res.status(200).json({
+        sts: true,
+        data: newUser,
+        err: null,
+        mes: "update RewardDiscipline success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static deleteRewardDisciplineById = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const newUser = await AppServices.deleteRewardDisciplineById(id);
+      res.status(200).json({
+        sts: true,
+        data: newUser,
+        err: null,
+        mes: "delete RewardDiscipline success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static getAllRewardDiscipline = async (req, res, next) => {
+    try {
+      const { body, query } = req;
+      const user = await AppServices.getAllRewardDiscipline(body, query);
+      res.status(200).json({
+        sts: true,
+        data: user,
+        err: null,
+        mes: "get RewardDiscipline success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static getDetailSalarySheet = async (req, res, next) => {
+    try {
+      const { body } = req;
+      const user = await AppServices.getDetailSalarySheet(body);
+      res.status(200).json({
+        sts: true,
+        data: user,
+        err: null,
+        mes: "get salary sheet success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 module.exports = AppControllers;

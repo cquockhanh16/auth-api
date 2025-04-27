@@ -26,4 +26,30 @@ router.get("/list/project", AppControllers.getProject);
 
 router.get("/detail/home", AppControllers.getDataHome);
 
+router.post("/list/timesheet", AppControllers.getAllTimesheet);
+
+router.post("/create/employee", AppControllers.addEmployee);
+
+router.post("/create/timesheet", AppControllers.addTimesheet);
+
+router.put("/update/timesheet", AppControllers.updateTimesheet);
+
+router.delete("/delete/timesheet/:id", AppControllers.deleteTimesheetById);
+
+router.post("/list/reward-discipline", AppControllers.getAllRewardDiscipline);
+
+router.post("/create/reward-discipline", AppControllers.addRewardDiscipline);
+
+router.put(
+  "/update/reward-discipline/:id",
+  AppControllers.updateRewardDiscipline
+);
+
+router.delete(
+  "/delete/reward-discipline/:id",
+  AppControllers.deleteRewardDisciplineById
+);
+
+router.get("/detail/reward-discipline", AppControllers.getDetailSalarySheet);
+
 module.exports = router;
