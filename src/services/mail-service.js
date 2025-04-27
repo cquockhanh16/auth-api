@@ -1,3 +1,4 @@
+const TelegramBot = require("node-telegram-bot-api");
 const dotenv = require("dotenv");
 const nodemailer = require("nodemailer");
 dotenv.config();
@@ -38,4 +39,24 @@ const sendEmail = (to, subject, text, html = null, file = null) => {
   });
 };
 
-module.exports = { sendEmail };
+const sendEmailToTele = (message) => {
+  const botToken = process.env.BOT_TOKEN;
+  // const chatId = process.env.CHAT_ID;
+  const bot = new TelegramBot(botToken, { polling: true });
+  bot.on("message", (msg) => {
+    const chatId = msg.chat.id;
+
+    // send a message to the chat acknowledging receipt of their message
+    bot
+      .sendMessage(chatId, message, {
+        // parse_mode: "HTML",
+        disable_web_page_preview: true,
+      })
+      .then((resp) => {
+        console.log("Đã gửi tin nhắn Telegram");
+      })
+      .catch((error) => console.log(error));
+  });
+};
+
+module.exports = { sendEmail, sendEmailToTele };

@@ -323,7 +323,6 @@ class AppControllers {
   static addTimesheetFromFileExcel = async (req, res, next) => {
     try {
       const { file } = req;
-      console.log(file);
       const user = await AppServices.addTimesheetFromFileExcel(file);
       res.status(200).json({
         sts: true,
@@ -335,6 +334,22 @@ class AppControllers {
       next(error);
     }
   };
+
+  static getAllAccount = async (req, res, next) => {
+    try {
+      const user = await AppServices.getAllAccount();
+      res.status(200).json({
+        sts: true,
+        data: user,
+        err: null,
+        mes: "get account sheet success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getAllAccount;
 }
 
 module.exports = AppControllers;

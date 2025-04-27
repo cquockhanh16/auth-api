@@ -60,4 +60,6 @@ router.post(
   AppControllers.addTimesheetFromFileExcel
 );
 
+router.get("/list/account", AppControllers.getAllAccount);
+
 module.exports = router;

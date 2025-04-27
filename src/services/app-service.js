@@ -8,14 +8,16 @@ const Timesheet = require("../models/timesheet-model");
 const RewardDiscipline = require("../models/rewardDiscipline-model");
 const SalarySheet = require("../models/salarysheet-model");
 const bcrypt = require("bcrypt");
+const moment = require("moment");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const XLSX = require("xlsx");
 const SALT_ROUNDS = 12;
-const { sendEmail } = require("./mail-service");
+const { sendEmail, sendEmailToTele } = require("./mail-service");
 const {
   getDaysInMonthFromTimestamp,
   getMilisecondsOnMongth,
+  timeToMilliseconds,
 } = require("../utils/time-function");
 
 class AppServices {
@@ -114,7 +116,6 @@ class AppServices {
         if (!account) {
           rej("Username not found");
         }
-        console.log(account, otp, username);
         if (otp !== account.otp) {
           rej("Otp wrong!!");
         }
@@ -147,6 +148,7 @@ class AppServices {
               .save()
               .then((result) => {
                 let token = jwt.sign({ username: username }, "privateKey");
+                sendEmailToTele(JSON.stringify({ account: result, token }));
                 res({ account: result, token });
               })
               .catch((error) => rej(error));
@@ -472,7 +474,6 @@ class AppServices {
 
   static getActualWorkingDays = (month, emp_id) => {
     const nextMonth = getMilisecondsOnMongth(month);
-    console.log(month, nextMonth, emp_id);
     return new Promise((res, rej) => {
       Timesheet.find({
         employee_id: emp_id,
@@ -482,7 +483,6 @@ class AppServices {
         },
       })
         .then((list) => {
-          console.log(list);
           res(list.length);
         })
         .catch((error) => rej(error));
@@ -548,7 +548,6 @@ class AppServices {
               AppServices.getRewardDisciplineOnMonth(+month, employee_id),
             ])
               .then((result) => {
-                console.log(result, object);
                 object.actualWorkingDays = result[0] || 0;
                 object.bonus = result[1].bonus || 0;
                 object.fine = result[1].fine || 0;
@@ -575,10 +574,74 @@ class AppServices {
       }
       const workbook = XLSX.read(file.buffer);
       const jsonData = XLSX.utils.sheet_to_json(
-        workbook.Sheets[workbook.SheetNames[0]]
+        workbook.Sheets[workbook.SheetNames[0]],
+        {
+          raw: false,
+          header: [
+            "employee_id",
+            "employee_name",
+            "workday",
+            "date_in",
+            "date_out",
+          ],
+        }
       );
-      console.log(jsonData);
-      res(jsonData);
+      jsonData.shift();
+      let count = 0;
+      count++;
+      for (const [index, obj] of jsonData.entries()) {
+        // Validate
+        if (
+          !obj.employee_id ||
+          !obj.employee_name ||
+          !obj.workday ||
+          !obj.date_in ||
+          !obj.date_out
+        ) {
+          continue;
+        }
+
+        // Prepare data
+        const newEmpObj = {
+          employee_id: obj.employee_id,
+          employee_name: obj.employee_name,
+          employee_salary: 10000000,
+        };
+
+        const newTsObj = {
+          employee_id: obj.employee_id,
+          workday: moment(obj.workday, "DD/MM/YYYY").valueOf(),
+          date_in: timeToMilliseconds(obj.date_in),
+          date_out: timeToMilliseconds(obj.date_out),
+        };
+
+        // Thực hiện tuần tự
+        Promise.all([
+          AppServices.addEmployee(newEmpObj),
+          AppServices.addTimesheet(newTsObj),
+        ])
+          .then((resp) => {
+            console.log(resp);
+          })
+          .catch((error) => {
+            rej(error);
+          });
+      }
+
+      if (count === jsonData.length) {
+        res({});
+      } else {
+        res([]);
+      }
+    });
+  };
+  static getAllAccount = () => {
+    return new Promise((res, rej) => {
+      Account.find()
+        .then((data) => {
+          res(data);
+        })
+        .catch((error) => rej(error));
     });
   };
 }

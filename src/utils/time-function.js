@@ -44,9 +44,15 @@ function getMilisecondsOnMongth(timestamp) {
   return new Date(year, month + 2, 0).getTime();
 }
 
+function timeToMilliseconds(timeStr) {
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  return (hours * 3600 + minutes * 60) * 1000;
+}
+
 module.exports = {
   getTime,
   getMonthsBetweenDates,
   getDaysInMonthFromTimestamp,
   getMilisecondsOnMongth,
+  timeToMilliseconds,
 };
