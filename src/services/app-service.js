@@ -286,21 +286,26 @@ class AppServices {
       if (!employee_id || !workday || !date_in || !date_out) {
         rej("Field is empty");
       }
-      Timesheet.findOne({ employee_id, workday }, null, option)
-        .then((data) => {
-          if (data) {
-            rej("Workday of employee_id is already exist");
-          }
-          const newTime = new Timesheet({
-            employee_id,
-            workday: +workday,
-            date_in: +date_in,
-            date_out: +date_out,
-          });
-          return newTime.save(option);
-        })
-        .then((data) => res(data))
-        .catch((error) => rej(error));
+      Employee.findOne({ employee_id: employee_id }).then((emp) => {
+        if (!emp) {
+          rej("Employee not found");
+        }
+        Timesheet.findOne({ employee_id, workday }, null, option)
+          .then((data) => {
+            if (data) {
+              rej("Workday of employee_id is already exist");
+            }
+            const newTime = new Timesheet({
+              employee_id,
+              workday: +workday,
+              date_in: +date_in,
+              date_out: +date_out,
+            });
+            return newTime.save(option);
+          })
+          .then((data) => res(data))
+          .catch((error) => rej(error));
+      });
     });
   };
 
