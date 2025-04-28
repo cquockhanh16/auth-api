@@ -623,7 +623,13 @@ class AppServices {
               date_in: timeToMilliseconds(obj.date_in),
               date_out: timeToMilliseconds(obj.date_out),
             };
-            await AppServices.addEmployee(newEmpObj, { session });
+            await Employee.findOne({ employee_id: obj.employee_id })
+              .session(session)
+              .then(async (emp) => {
+                if (!emp) {
+                  await AppServices.addEmployee(newEmpObj, { session });
+                }
+              });
             await AppServices.addTimesheet(newTsObj, { session });
           }
 
