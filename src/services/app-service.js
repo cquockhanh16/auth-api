@@ -9,6 +9,7 @@ const RewardDiscipline = require("../models/rewardDiscipline-model");
 const SalarySheet = require("../models/salarysheet-model");
 const bcrypt = require("bcrypt");
 const moment = require("moment");
+const mongoose = require("mongoose");
 const { parsePhoneNumberFromString } = require("libphonenumber-js");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
@@ -257,13 +258,13 @@ class AppServices {
     });
   };
 
-  static addEmployee = (body) => {
+  static addEmployee = (body, option = {}) => {
     return new Promise((res, rej) => {
       const { employee_id, employee_name, employee_salary } = body;
       if (!employee_id || !employee_name || !employee_salary) {
         rej("Employee id or name is required");
       }
-      Employee.findOne({ employee_id })
+      Employee.findOne({ employee_id }, null, option)
         .then((emp) => {
           if (emp) {
             rej("Employee id is already");
@@ -272,20 +273,20 @@ class AppServices {
           nemp.employee_id = employee_id;
           nemp.employee_name = employee_name;
           nemp.employee_salary = employee_salary;
-          return nemp.save();
+          return nemp.save(option);
         })
         .then((data) => res(data))
         .catch((error) => rej(error));
     });
   };
 
-  static addTimesheet = (body) => {
+  static addTimesheet = (body, option = {}) => {
     return new Promise((res, rej) => {
       const { employee_id, workday, date_in, date_out } = body;
       if (!employee_id || !workday || !date_in || !date_out) {
         rej("Field is empty");
       }
-      Timesheet.findOne({ employee_id, workday })
+      Timesheet.findOne({ employee_id, workday }, null, option)
         .then((data) => {
           if (data) {
             rej("Workday of employee_id is already exist");
@@ -296,7 +297,7 @@ class AppServices {
             date_in: +date_in,
             date_out: +date_out,
           });
-          return newTime.save();
+          return newTime.save(option);
         })
         .then((data) => res(data))
         .catch((error) => rej(error));
@@ -345,47 +346,34 @@ class AppServices {
       const option = {};
       employee_id ? (option.employee_id = employee_id) : "";
       employee_name ? (option.employee_name = employee_name) : "";
-      workday ? (option.workday = workday) : "";
-      Employee.findOne(option).then((emp) => {
-        Timesheet.find(option)
-          .limit(limit)
-          .skip((page - 1) * limit)
-          .sort({ workday: -1 })
-          .then((list) => {
-            let data = [];
-            if (emp) {
-              data = list.map((sheet) => ({
-                ...sheet._doc,
-                employee_name: emp.employee_name,
-              }));
-            } else {
-              data = list.map((sheet) => {
-                Employee.findOne({ employee_id: sheet.employee_id }).then(
-                  (empp) => {
-                    if (empp) {
-                      return {
-                        ...sheet._doc,
-                        employee_name: empp.employee_name,
-                      };
-                    }
-                    return {
-                      ...sheet._doc,
-                      employee_name: "",
-                    };
-                  }
-                );
-              });
-            }
-            res({
-              total_page: Math.ceil(list.length / limit),
-              current_page: page,
-              data: data,
-              limit,
-            });
-          })
-          .catch((error) => rej(error));
-      });
-    });
+      workday ? (option.workday = +workday) : "";
+      Timesheet.find(option)
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .sort({ workday: -1 })
+        .then((list) => {
+          return Promise.all(
+            list.map((sheet) => {
+              return Employee.findOne({ employee_id: sheet.employee_id }).then(
+                (empp) => {
+                  return {
+                    ...sheet._doc,
+                    employee_name: empp ? empp.employee_name : "",
+                  };
+                }
+              );
+            })
+          );
+        })
+        .then((data) => {
+          res({
+            total_page: Math.ceil(data.length / limit),
+            current_page: page,
+            data: data,
+            limit,
+          });
+        });
+    }).catch((error) => rej(error));
   };
 
   static addRewardDiscipline = (body) => {
@@ -451,45 +439,33 @@ class AppServices {
       employee_name ? (option.employee_name = employee_name) : "";
       workday ? (option.workday = +workday) : "";
       type ? (option.type = type) : "";
-      Employee.findOne(option).then((emp) => {
-        RewardDiscipline.find(option)
-          .limit(limit)
-          .skip((page - 1) * limit)
-          .sort({ workday: -1 })
-          .then((list) => {
-            let data = [];
-            if (emp) {
-              data = list.map((rew) => ({
-                ...rew._doc,
-                employee_name: emp.employee_name,
-              }));
-            } else {
-              data = list.map((rew) => {
-                Employee.findOne({ employee_id: rew.employee_id }).then(
-                  (empp) => {
-                    if (empp) {
-                      return {
-                        ...rew._doc,
-                        employee_name: empp.employee_name,
-                      };
-                    }
-                    return {
-                      ...rew._doc,
-                      employee_name: "",
-                    };
-                  }
-                );
-              });
-            }
-            res({
-              total_page: Math.ceil(list.length / limit),
-              current_page: page,
-              data: data,
-              limit,
-            });
-          })
-          .catch((error) => rej(error));
-      });
+      RewardDiscipline.find(option)
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .sort({ workday: -1 })
+        .then((list) => {
+          return Promise.all(
+            list.map((rew) => {
+              return Employee.findOne({ employee_id: rew.employee_id }).then(
+                (empp) => {
+                  return {
+                    ...rew._doc,
+                    employee_name: empp ? empp.employee_name : "",
+                  };
+                }
+              );
+            })
+          );
+        })
+        .then((data) => {
+          res({
+            total_page: Math.ceil(data.length / limit),
+            current_page: page,
+            data: data,
+            limit,
+          });
+        })
+        .catch((error) => rej(error));
     });
   };
 
@@ -589,70 +565,78 @@ class AppServices {
     });
   };
   static addTimesheetFromFileExcel = (file) => {
-    return new Promise((res, rej) => {
-      if (!file) {
-        rej("File not found");
-      }
-      const workbook = XLSX.read(file.buffer);
-      const jsonData = XLSX.utils.sheet_to_json(
-        workbook.Sheets[workbook.SheetNames[0]],
-        {
-          raw: false,
-          header: [
-            "employee_id",
-            "employee_name",
-            "workday",
-            "date_in",
-            "date_out",
-          ],
-        }
-      );
-      jsonData.shift();
-      let count = 0;
-      count++;
-      for (const [index, obj] of jsonData.entries()) {
-        // Validate
-        if (
-          !obj.employee_id ||
-          !obj.employee_name ||
-          !obj.workday ||
-          !obj.date_in ||
-          !obj.date_out
-        ) {
-          continue;
+    return new Promise(async (res, rej) => {
+      try {
+        if (!file) {
+          throw new Error("File not found");
         }
 
-        // Prepare data
-        const newEmpObj = {
-          employee_id: obj.employee_id,
-          employee_name: obj.employee_name,
-          employee_salary: 10000000,
-        };
+        const workbook = XLSX.read(file.buffer);
+        const jsonData = XLSX.utils.sheet_to_json(
+          workbook.Sheets[workbook.SheetNames[0]],
+          {
+            raw: false,
+            header: [
+              "employee_id",
+              "employee_name",
+              "workday",
+              "date_in",
+              "date_out",
+            ],
+          }
+        );
+        jsonData.shift();
 
-        const newTsObj = {
-          employee_id: obj.employee_id,
-          workday: moment(obj.workday, "DD/MM/YYYY").valueOf(),
-          date_in: timeToMilliseconds(obj.date_in),
-          date_out: timeToMilliseconds(obj.date_out),
-        };
+        const session = await mongoose.startSession();
 
-        // Thực hiện tuần tự
-        Promise.all([
-          AppServices.addEmployee(newEmpObj),
-          AppServices.addTimesheet(newTsObj),
-        ])
-          .then((resp) => {
-            console.log(resp);
-          })
-          .catch((error) => {
-            rej(error);
-          });
-      }
+        try {
+          session.startTransaction();
 
-      if (count === jsonData.length) {
-        res({});
-      } else {
-        res([]);
+          // Process all records sequentially
+          for (const [index, obj] of jsonData.entries()) {
+            // Validate
+            if (
+              !obj.employee_id ||
+              !obj.employee_name ||
+              !obj.workday ||
+              !obj.date_in ||
+              !obj.date_out
+            ) {
+              continue;
+            }
+
+            // Check for existing records
+            const workdayTimestamp = moment(
+              obj.workday,
+              "DD/MM/YYYY"
+            ).valueOf();
+
+            const newEmpObj = {
+              employee_id: obj.employee_id,
+              employee_name: obj.employee_name,
+              employee_salary: 10000000,
+            };
+
+            const newTsObj = {
+              employee_id: obj.employee_id,
+              workday: workdayTimestamp,
+              date_in: timeToMilliseconds(obj.date_in),
+              date_out: timeToMilliseconds(obj.date_out),
+            };
+            await AppServices.addEmployee(newEmpObj, { session });
+            await AppServices.addTimesheet(newTsObj, { session });
+          }
+
+          await session.commitTransaction();
+          res([]); // Success response
+        } catch (error) {
+          await session.abortTransaction();
+          throw error;
+        } finally {
+          session.endSession();
+        }
+      } catch (error) {
+        rej(error);
       }
     });
   };
@@ -666,5 +650,10 @@ class AppServices {
     });
   };
 }
+
+// const [existingEmployee, existingTimesheet] = await Promise.all([
+//   AppServices.addEmployee(newEmpObj, { session }), // Make sure to pass session
+//   AppServices.addTimesheet(newTsObj, { session }),
+// ]);
 
 module.exports = AppServices;
