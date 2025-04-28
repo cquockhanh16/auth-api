@@ -382,17 +382,22 @@ class AppServices {
       if (!employee_id || !workday || !amount) {
         rej("Field is empty");
       }
-      const newRew = new RewardDiscipline({
-        employee_id,
-        workday: +workday,
-        type,
-        reason,
-        amount,
+      Employee.findOne({ employee_id: employee_id }).then((emp) => {
+        if (!emp) {
+          rej("Employee not found");
+        }
+        const newRew = new RewardDiscipline({
+          employee_id,
+          workday: +workday,
+          type,
+          reason,
+          amount,
+        });
+        newRew
+          .save()
+          .then((resp) => res(resp))
+          .catch((error) => rej(error));
       });
-      newRew
-        .save()
-        .then((resp) => res(resp))
-        .catch((error) => rej(error));
     });
   };
 
