@@ -651,7 +651,7 @@ class AppServices {
                 if (!emp) {
                   await AppServices.addEmployee(newEmpObj, { session }).then(
                     async (newEmp) => {
-                      await Timesheet.create(newTsObj).session(session);
+                      await Timesheet.create([newTsObj], { session });
                     }
                   );
                 } else {
