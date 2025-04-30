@@ -30,11 +30,28 @@ const getMonthsBetweenDates = (ms1, ms2) => {
   return Math.abs(months);
 };
 
+function countWeekdays(year, month) {
+  // Lưu ý: Tháng trong JavaScript bắt đầu từ 0 (0 = tháng 1, 11 = tháng 12)
+  const daysInMonth = new Date(year, month + 1, 0).getDate(); // Lấy số ngày trong tháng
+  let count = 0;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const currentDate = new Date(year, month, day);
+    const dayOfWeek = currentDate.getDay(); // 0 (Chủ Nhật) đến 6 (Thứ Bảy)
+
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      count++; // Tăng biến đếm nếu không phải Thứ Bảy hoặc Chủ Nhật
+    }
+  }
+
+  return count;
+}
+
 function getDaysInMonthFromTimestamp(timestamp) {
   const date = new Date(timestamp);
   const year = date.getFullYear();
   const month = date.getMonth(); // 0-11
-  return new Date(year, month + 1, 0).getDate();
+  return countWeekdays(year, month);
 }
 
 function getMilisecondsOnMongth(timestamp) {

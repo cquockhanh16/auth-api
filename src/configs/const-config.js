@@ -1,4 +1,13 @@
 const LIMIT_DATA_PAGE = 20;
 const DATA_PAGE = 1;
+const HOURS_SECONDS = 3600000;
+const WORK_HOURS = 8;
+const WORK_TIME_BREAK = 1.5;
 
-module.exports = { LIMIT_DATA_PAGE, DATA_PAGE };
+module.exports = {
+  LIMIT_DATA_PAGE,
+  DATA_PAGE,
+  HOURS_SECONDS,
+  WORK_HOURS,
+  WORK_TIME_BREAK,
+};

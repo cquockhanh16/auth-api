@@ -23,6 +23,12 @@ const {
   timeToMilliseconds,
 } = require("../utils/time-function");
 
+const {
+  HOURS_SECONDS,
+  WORK_HOURS,
+  WORK_TIME_BREAK,
+} = require("../configs/const-config");
+
 class AppServices {
   static createUser = (body, file = null) => {
     return new Promise((res, rej) => {
@@ -485,8 +491,16 @@ class AppServices {
         },
       })
         .then((list) => {
-          res(list.length);
+          let count = 0;
+          list.map((item) => {
+            count +=
+              ((item.date_out - item.date_in) / HOURS_SECONDS -
+                WORK_TIME_BREAK) /
+              WORK_HOURS;
+          });
+          return count;
         })
+        .then((data) => res(data))
         .catch((error) => rej(error));
     });
   };
@@ -543,14 +557,13 @@ class AppServices {
             const object = {};
             object.month = +month;
             object.salary = emp?.employee_salary || 1000000;
-            object.standardWorkingDays =
-              getDaysInMonthFromTimestamp(+month) - 8;
+            object.standardWorkingDays = getDaysInMonthFromTimestamp(+month);
             Promise.all([
               AppServices.getActualWorkingDays(+month, employee_id),
               AppServices.getRewardDisciplineOnMonth(+month, employee_id),
             ])
               .then((result) => {
-                object.actualWorkingDays = result[0] || 0;
+                object.actualWorkingDays = Number(result[0]).toFixed(2) || 0;
                 object.bonus = result[1].bonus || 0;
                 object.fine = result[1].fine || 0;
                 object.baseSalary =
@@ -611,10 +624,9 @@ class AppServices {
             }
 
             // Check for existing records
-            const workdayTimestamp = moment(
-              obj.workday,
-              "DD/MM/YYYY"
-            ).valueOf();
+            const workdayTimestamp = moment(obj.workday, "DD/MM/YYYY")
+              .startOf("day")
+              .valueOf();
 
             const newEmpObj = {
               employee_id: obj.employee_id,
@@ -632,10 +644,15 @@ class AppServices {
               .session(session)
               .then(async (emp) => {
                 if (!emp) {
-                  await AppServices.addEmployee(newEmpObj, { session });
+                  await AppServices.addEmployee(newEmpObj, { session }).then(
+                    async (newEmp) => {
+                      await Timesheet.create(newTsObj).session(session);
+                    }
+                  );
+                } else {
+                  await AppServices.addTimesheet(newTsObj, { session });
                 }
               });
-            await AppServices.addTimesheet(newTsObj, { session });
           }
 
           await session.commitTransaction();
