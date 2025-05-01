@@ -53,8 +53,8 @@ function countWeekdays(year, month) {
   let count = 0;
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const currentDate = new Date(Date.UTC(year, month, day)); // Sử dụng UTC
-    const dayOfWeek = currentDate.getUTCDay(); // Lấy ngày theo UTC
+    const currentDate = new Date(year, month + 1, day);
+    const dayOfWeek = currentDate.getDay(); // 0 (Chủ Nhật) đến 6 (Thứ Bảy)
 
     if (dayOfWeek !== 0 && dayOfWeek !== 6) {
       count++; // Tăng biến đếm nếu không phải Thứ Bảy (6) hoặc Chủ Nhật (0)
