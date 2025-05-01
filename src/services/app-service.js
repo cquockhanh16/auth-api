@@ -498,7 +498,7 @@ class AppServices {
         .then((list) => {
           let count = 0;
           list.map((item) => {
-            const tempTime = (item.date_out - item.date_in) / HOURS_SECONDS;
+            const tempTime = item.date_out - item.date_in;
             if (tempTime > WORK_TIME_BREAK) {
               count +=
                 (item.date_out - item.date_in - WORK_TIME_BREAK) /
