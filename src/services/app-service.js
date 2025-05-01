@@ -632,20 +632,19 @@ class AppServices {
               continue;
             }
 
-            // Check for existing records
-            const workdayTimestamp = moment(obj.workday, "DD/MM/YYYY")
-              .startOf("day")
-              .valueOf();
-
             const newEmpObj = {
               employee_id: obj.employee_id,
               employee_name: obj.employee_name,
               employee_salary: 10000000,
             };
 
+            const milliseconds = Date.parse(
+              obj.workday.split("/").reverse().join("/")
+            );
+
             const newTsObj = {
               employee_id: obj.employee_id,
-              workday: workdayTimestamp,
+              workday: +milliseconds,
               date_in: timeToMilliseconds(obj.date_in),
               date_out: timeToMilliseconds(obj.date_out),
             };
