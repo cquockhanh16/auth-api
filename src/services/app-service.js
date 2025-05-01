@@ -292,17 +292,17 @@ class AppServices {
     return new Promise((res, rej) => {
       const { employee_id, workday, date_in, date_out } = body;
       if (!employee_id || !workday || !date_in || !date_out) {
-        rej("Field is empty");
+        return rej("Field is empty");
       }
       Employee.findOne({ employee_id }).then((emp) => {
         if (!emp) {
-          rej("Employee not found");
+          return rej("Employee not found");
         }
         const timeTemp = getStartOfDayUTC(+workday);
-        Timesheet.findOne({ employee_id, workday: +timeTemp }, null, option)
+        Timesheet.findOne({ employee_id, workday: +timeTemp })
           .then((data) => {
             if (data) {
-              rej("Workday of employee_id is already exist");
+              return rej("Workday of employee_id is already exist");
             }
             const newTime = new Timesheet({
               employee_id,
@@ -360,7 +360,10 @@ class AppServices {
       const option = {};
       employee_id ? (option.employee_id = employee_id) : "";
       employee_name ? (option.employee_name = employee_name) : "";
-      workday ? (option.workday = +workday) : "";
+      if (workday) {
+        const timeTemp = getStartOfDayUTC(+workday);
+        option.workday = +timeTemp;
+      }
       Timesheet.find(option)
         .limit(limit)
         .skip((page - 1) * limit)
@@ -640,13 +643,14 @@ class AppServices {
               employee_salary: 10000000,
             };
 
-            const milliseconds = Date.parse(
-              obj.workday.split("/").reverse().join("/")
-            );
+            // Check for existing records
+            const workdayTimestamp = moment(obj.workday, "DD/MM/YYYY")
+              .startOf("day")
+              .valueOf();
 
             const newTsObj = {
               employee_id: obj.employee_id,
-              workday: getStartOfDayUTC(+milliseconds),
+              workday: getStartOfDayUTC(+workdayTimestamp),
               date_in: timeToMilliseconds(obj.date_in),
               date_out: timeToMilliseconds(obj.date_out),
             };

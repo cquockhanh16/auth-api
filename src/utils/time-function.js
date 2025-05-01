@@ -95,9 +95,24 @@ function isSameDay(timestamp1, timestamp2) {
 }
 
 function getStartOfDayUTC(timestamp) {
+  // Bước 1: Ép kiểu timestamp về số (tránh NaN)
+  const ts = Number(timestamp);
+  if (isNaN(ts)) throw new Error("Invalid timestamp");
+
+  // Bước 2: Tính ngày UTC KHÔNG bị ảnh hưởng bởi timezone local
+  const date = new Date(ts);
+  const utcDate = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  );
+
+  // Bước 3: Trả về timestamp nguyên bản của ngày UTC
+  return utcDate.getTime();
+}
+
+const normalizeTimestamp = (timestamp) => {
   const date = new Date(timestamp);
   return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-}
+};
 
 module.exports = {
   getTime,
