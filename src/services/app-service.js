@@ -21,6 +21,7 @@ const {
   getDaysInMonthFromTimestamp,
   getMilisecondsOnMongth,
   timeToMilliseconds,
+  isSameDay,
 } = require("../utils/time-function");
 
 const {
@@ -296,9 +297,9 @@ class AppServices {
         if (!emp) {
           rej("Employee not found");
         }
-        Timesheet.findOne({ employee_id, workday }, null, option)
+        Timesheet.findOne({ employee_id }, null, option)
           .then((data) => {
-            if (data) {
+            if (data || !isSameDay(+workday, +data.workday)) {
               rej("Workday of employee_id is already exist");
             }
             const newTime = new Timesheet({
@@ -633,7 +634,7 @@ class AppServices {
 
             // Check for existing records
             const workdayTimestamp = moment(obj.workday, "DD/MM/YYYY")
-              .startOf("end")
+              .startOf("day")
               .valueOf();
 
             const newEmpObj = {

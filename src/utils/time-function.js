@@ -83,10 +83,22 @@ function timeToMilliseconds(timeStr) {
   return (hours * 3600 + minutes * 60) * 1000;
 }
 
+function isSameDay(timestamp1, timestamp2) {
+  const date1 = new Date(timestamp1);
+  const date2 = new Date(timestamp2);
+
+  // Đặt về cùng thời điểm 00:00:00.000
+  date1.setHours(0, 0, 0, 0);
+  date2.setHours(0, 0, 0, 0);
+
+  return date1.getTime() === date2.getTime();
+}
+
 module.exports = {
   getTime,
   getMonthsBetweenDates,
   getDaysInMonthFromTimestamp,
   getMilisecondsOnMongth,
   timeToMilliseconds,
+  isSameDay,
 };
