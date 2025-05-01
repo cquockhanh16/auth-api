@@ -299,7 +299,7 @@ class AppServices {
         }
         Timesheet.findOne({ employee_id }, null, option)
           .then((data) => {
-            if (data || !isSameDay(+workday, +data.workday)) {
+            if (data || isSameDay(+workday, +data.workday)) {
               rej("Workday of employee_id is already exist");
             }
             const newTime = new Timesheet({
