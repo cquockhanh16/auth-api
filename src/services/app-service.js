@@ -633,7 +633,7 @@ class AppServices {
 
             // Check for existing records
             const workdayTimestamp = moment(obj.workday, "DD/MM/YYYY")
-              .startOf("day")
+              .startOf("end")
               .valueOf();
 
             const newEmpObj = {
