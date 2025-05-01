@@ -299,14 +299,14 @@ class AppServices {
           rej("Employee not found");
         }
         const timeTemp = getStartOfDayUTC(+workday);
-        Timesheet.findOne({ employee_id, workday: timeTemp }, null, option)
+        Timesheet.findOne({ employee_id, workday: +timeTemp }, null, option)
           .then((data) => {
             if (data) {
               rej("Workday of employee_id is already exist");
             }
             const newTime = new Timesheet({
               employee_id,
-              workday: +workday,
+              workday: +timeTemp,
               date_in: +date_in,
               date_out: +date_out,
             });
