@@ -94,6 +94,11 @@ function isSameDay(timestamp1, timestamp2) {
   return date1.getTime() === date2.getTime();
 }
 
+function getStartOfDayUTC(timestamp) {
+  const date = new Date(timestamp);
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
 module.exports = {
   getTime,
   getMonthsBetweenDates,
@@ -101,4 +106,5 @@ module.exports = {
   getMilisecondsOnMongth,
   timeToMilliseconds,
   isSameDay,
+  getStartOfDayUTC,
 };

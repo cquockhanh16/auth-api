@@ -22,6 +22,7 @@ const {
   getMilisecondsOnMongth,
   timeToMilliseconds,
   isSameDay,
+  getStartOfDayUTC,
 } = require("../utils/time-function");
 
 const {
@@ -297,9 +298,10 @@ class AppServices {
         if (!emp) {
           rej("Employee not found");
         }
-        Timesheet.findOne({ employee_id }, null, option)
+        const timeTemp = getStartOfDayUTC(+workday);
+        Timesheet.findOne({ employee_id, workday: timeTemp }, null, option)
           .then((data) => {
-            if (data || isSameDay(+workday, +data.workday)) {
+            if (data) {
               rej("Workday of employee_id is already exist");
             }
             const newTime = new Timesheet({
@@ -644,7 +646,7 @@ class AppServices {
 
             const newTsObj = {
               employee_id: obj.employee_id,
-              workday: +milliseconds,
+              workday: getStartOfDayUTC(+milliseconds),
               date_in: timeToMilliseconds(obj.date_in),
               date_out: timeToMilliseconds(obj.date_out),
             };
