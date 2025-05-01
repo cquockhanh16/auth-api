@@ -47,6 +47,23 @@ function countWeekdays(year, month) {
   return count;
 }
 
+function countWeekdays(year, month) {
+  // Lưu ý: Tháng trong JavaScript bắt đầu từ 0 (0 = tháng 1, 11 = tháng 12)
+  const daysInMonth = new Date(year, month + 1, 0).getDate(); // Lấy số ngày trong tháng
+  let count = 0;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const currentDate = new Date(Date.UTC(year, month, day)); // Sử dụng UTC
+    const dayOfWeek = currentDate.getUTCDay(); // Lấy ngày theo UTC
+
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      count++; // Tăng biến đếm nếu không phải Thứ Bảy (6) hoặc Chủ Nhật (0)
+    }
+  }
+
+  return count;
+}
+
 function getDaysInMonthFromTimestamp(timestamp) {
   const date = new Date(timestamp);
   const year = date.getFullYear();

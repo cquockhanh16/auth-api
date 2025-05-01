@@ -2,7 +2,7 @@ const LIMIT_DATA_PAGE = 20;
 const DATA_PAGE = 1;
 const HOURS_SECONDS = 3600000;
 const WORK_HOURS = 8;
-const WORK_TIME_BREAK = 1.5;
+const WORK_TIME_BREAK = 1.5 * HOURS_SECONDS;
 
 module.exports = {
   LIMIT_DATA_PAGE,

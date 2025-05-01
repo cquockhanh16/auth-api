@@ -498,10 +498,13 @@ class AppServices {
         .then((list) => {
           let count = 0;
           list.map((item) => {
-            count +=
-              ((item.date_out - item.date_in) / HOURS_SECONDS -
-                WORK_TIME_BREAK) /
-              WORK_HOURS;
+            const tempTime = (item.date_out - item.date_in) / HOURS_SECONDS;
+            if (tempTime > WORK_TIME_BREAK) {
+              count +=
+                (item.date_out - item.date_in - WORK_TIME_BREAK) /
+                HOURS_SECONDS /
+                WORK_HOURS;
+            }
           });
           return count;
         })
