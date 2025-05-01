@@ -299,6 +299,7 @@ class AppServices {
           return rej("Employee not found");
         }
         const timeTemp = getStartOfDayUTC(+workday);
+        console.log({ employee_id, workday: +timeTemp });
         Timesheet.findOne({ employee_id, workday: +timeTemp })
           .then((data) => {
             if (data) {
@@ -364,6 +365,7 @@ class AppServices {
         const timeTemp = getStartOfDayUTC(+workday);
         option.workday = +timeTemp;
       }
+      console.log(option);
       Timesheet.find(option)
         .limit(limit)
         .skip((page - 1) * limit)
