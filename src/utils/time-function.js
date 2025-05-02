@@ -93,21 +93,51 @@ function isSameDay(timestamp1, timestamp2) {
 
   return date1.getTime() === date2.getTime();
 }
+// function getStartOfDayUTC(timestamp) {
+//   // Bước 1: Validate timestamp
+//   const ts = Number(timestamp);
+//   if (isNaN(ts)) throw new Error("Invalid timestamp");
+
+//   // Bước 2: Chuyển đổi trực tiếp không qua timezone local
+//   const utcMidnight = new Date(ts);
+//   utcMidnight.setUTCHours(0, 0, 0, 0); // Force về 00:00:00.000 UTC
+
+//   // Bước 3: Trả về timestamp chính xác
+//   return utcMidnight.getTime();
+// }
 
 function getStartOfDayUTC(timestamp) {
-  // Bước 1: Ép kiểu timestamp về số (tránh NaN)
+  // Bước 1: Ép kiểu và validate
   const ts = Number(timestamp);
   if (isNaN(ts)) throw new Error("Invalid timestamp");
 
-  // Bước 2: Tính ngày UTC KHÔNG bị ảnh hưởng bởi timezone local
+  // Bước 2: Tạo Date object và set về 00:00 UTC
   const date = new Date(ts);
   const utcDate = new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
   );
 
-  // Bước 3: Trả về timestamp nguyên bản của ngày UTC
+  // Bước 3: Trả về timestamp
   return utcDate.getTime();
 }
+
+// function getStartOfDayUTC(timestamp) {
+//   // 1. Ép kiểu chắc chắn
+//   const ts = Math.floor(Number(timestamp));
+
+//   // 2. Tính số miliseconds trong 1 ngày
+//   const MS_PER_DAY = 86400000;
+
+//   // 3. Làm tròn về đầu ngày UTC
+//   return Math.floor(ts / MS_PER_DAY) * MS_PER_DAY;
+// }
+
+// function getStartOfDayUTC(timestamp) {
+//   const SECONDS_PER_DAY = 86400;
+//   const timestampSeconds = Math.floor(timestamp / 1000);
+//   const daysSinceEpoch = Math.floor(timestampSeconds / SECONDS_PER_DAY);
+//   return daysSinceEpoch * SECONDS_PER_DAY * 1000;
+// }
 
 const normalizeTimestamp = (timestamp) => {
   const date = new Date(timestamp);

@@ -298,16 +298,16 @@ class AppServices {
         if (!emp) {
           return rej("Employee not found");
         }
-        const timeTemp = getStartOfDayUTC(+workday);
-        console.log({ employee_id, workday: +timeTemp });
-        Timesheet.findOne({ employee_id, workday: +timeTemp })
+        // const timeTemp = getStartOfDayUTC(+workday);
+        console.log({ employee_id, workday: +workday });
+        Timesheet.findOne({ employee_id, workday: +workday })
           .then((data) => {
             if (data) {
               return rej("Workday of employee_id is already exist");
             }
             const newTime = new Timesheet({
               employee_id,
-              workday: +timeTemp,
+              workday: +workday,
               date_in: +date_in,
               date_out: +date_out,
             });
@@ -363,7 +363,7 @@ class AppServices {
       employee_name ? (option.employee_name = employee_name) : "";
       if (workday) {
         const timeTemp = getStartOfDayUTC(+workday);
-        option.workday = +timeTemp;
+        option.workday = +workday;
       }
       console.log(option);
       Timesheet.find(option)
@@ -399,11 +399,11 @@ class AppServices {
     return new Promise((res, rej) => {
       const { employee_id, workday, type, reason, amount } = body;
       if (!employee_id || !workday || !amount) {
-        rej("Field is empty");
+        return rej("Field is empty");
       }
       Employee.findOne({ employee_id: employee_id }).then((emp) => {
         if (!emp) {
-          rej("Employee not found");
+          return rej("Employee not found");
         }
         const newRew = new RewardDiscipline({
           employee_id,
@@ -652,7 +652,7 @@ class AppServices {
 
             const newTsObj = {
               employee_id: obj.employee_id,
-              workday: getStartOfDayUTC(+workdayTimestamp),
+              workday: +workdayTimestamp,
               date_in: timeToMilliseconds(obj.date_in),
               date_out: timeToMilliseconds(obj.date_out),
             };
